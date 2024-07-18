@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 const io = new Server({
     cors: {
         // origin: "http://localhost:5173",
-        origin: "http://estate-front-indol.vercel.app",
+        origin: "https://estate-front-indol.vercel.app",
     },
 })
 
