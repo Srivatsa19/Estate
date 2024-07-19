@@ -4,8 +4,6 @@ const io = new Server({
     cors: {
         // origin: "http://localhost:5173",
         origin: "https://estate-front-indol.vercel.app",
-        methods: ["GET", "POST"],
-        credentials: true
     },
 })
 
@@ -39,16 +37,5 @@ io.on("connection", (socket) => {
         removeUser(socket.id);
     })
 })
-
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'https://estate-front-indol.vercel.app');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(204);
-    }
-    next();
-});
 
 io.listen("4000");
