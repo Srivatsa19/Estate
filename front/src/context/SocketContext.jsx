@@ -10,7 +10,7 @@ export const SocketContextProvider = ({ children }) => {
 
     useEffect(() => {
         // setSocket(io("http://localhost:4000"))
-        setSocket(io("https://estate-socket.vercel.app"))
+        setSocket(io("https://estate-socket-8s3b.onrender.com"))
     }, [])
 
     useEffect(() => {
