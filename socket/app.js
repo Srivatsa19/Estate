@@ -4,6 +4,8 @@ const io = new Server({
     cors: {
         // origin: "http://localhost:5173",
         origin: "https://estate-front-indol.vercel.app",
+        methods: ["GET", "POST"],
+        credentials: true
     },
 })
 
