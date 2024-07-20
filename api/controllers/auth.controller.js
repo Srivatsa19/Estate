@@ -34,10 +34,11 @@ export const login = async (req, res) => {
             id: user.id
         }, process.env.JWT_SECRET_KEY, { expiresIn: mage })
         const {password: userPassword, ...userInfo} = user
+        const isProduction = process.env.NODE_ENV === 'production';
         res.cookie("token", token, {
             httpOnly: true,
-            maxAge: mage
-            // secure: true
+            maxAge: mage,
+            secure: isProduction
         }).status(200).json(userInfo)
     }
     catch(err) {
