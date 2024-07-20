@@ -95,7 +95,7 @@ enum Type {
 }
 
 enum Property {
-  appartment
+  apartment
   house
   condo
   land
