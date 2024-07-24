@@ -6,7 +6,6 @@ export const register = async (req, res) => {
     const {username, email, password} = req.body;
     try {
         const hashPassword = await bcrypt.hash(password, 10)
-        console.log(hashPassword)
         const newUser = await prisma.user.create({
             data: {
                 username, email, password: hashPassword,
@@ -28,19 +27,12 @@ export const login = async (req, res) => {
         if (!user) return res.status(401).json({ message:"Invalid Credentials" })
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) return res.status(401).json({ message:"Invalid Credentials" })
-        // res.setHeader("Set-Cookie", "test=" + "myValue").json("Success");
         const mage = 1000 * 60 * 60 * 24 * 7;
         const token = jwt.sign({
             id: user.id
         }, process.env.JWT_SECRET_KEY, { expiresIn: mage })
         const {password: userPassword, ...userInfo} = user
         const isProduction = process.env.NODE_ENV === 'production';
-        console.log('NODE_ENV:', process.env.NODE_ENV);
-        console.log('Setting cookie with options:', {
-            httpOnly: true,
-            maxAge: mage,
-            secure: isProduction
-        });
         res.cookie("token", token, {
             httpOnly: true,
             maxAge: mage,

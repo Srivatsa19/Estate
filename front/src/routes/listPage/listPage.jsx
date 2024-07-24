@@ -1,4 +1,3 @@
-import { listData } from "../../lib/dummydata";
 import "./listPage.scss";
 import Filter from "../../components/filter/Filter"
 import Card from "../../components/card/Card"

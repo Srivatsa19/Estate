@@ -21,7 +21,7 @@ function Chat({ chats }) {
 
   const handleOpenChat = async (id, receiver) => {
     try {
-      const res = await apiRequests("/chats/" + id);
+      const res = await apiRequests.get("/chats/" + id);
       if (!res.data.seenBy.includes(currentUser.id)) decrease();
       setChat({ ...res.data, receiver })
     }
@@ -34,7 +34,6 @@ function Chat({ chats }) {
     e.preventDefault();
     const formData = new FormData(e.target);
     const text = formData.get("text");
-    console.log(text)
     if (!text) return;
     try {
       const res = await apiRequests.post("/messages/" + chat.id, {

@@ -3,16 +3,28 @@ import Slider from "../../components/slider/Slider";
 import Map from "../../components/map/Map";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import DOMPurify from "dompurify";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import apiRequests from "../../lib/apiRequests";
 import { AuthContext } from "../../context/AuthContext";
+import { SocketContext } from "../../context/SocketContext";
+import { format } from "timeago.js";
+import { useNotificationStore } from "../../lib/notificationStore";
 
 function SinglePage() {
 
   const post = useLoaderData();
   const navigate = useNavigate();
-  const {currentUser} = useContext(AuthContext)
+  const { currentUser } = useContext(AuthContext)
   const [saved, setSaved] = useState(post.isSaved);
+  const [chat, setChat] = useState(null)
+  const { socket } = useContext(SocketContext);
+  const messageEndRef = useRef();
+
+  const decrease = useNotificationStore(state => state.decrease);
+
+  useEffect(() => {
+    messageEndRef.current?.scrollIntoView({behaviour: "smooth"})
+  }, [chat])
 
   const handleSave = async () => {
     setSaved((prev) => !prev)
@@ -25,6 +37,50 @@ function SinglePage() {
     catch (err) {
       console.log(err);
       setSaved((prev) => !prev)
+    }
+  }
+
+  const handleClick = async () => {
+    const res = await apiRequests.get("/chats/unique/" + post.userId)
+    if (!res.data || res.data.length === 0) {
+      await apiRequests.post("/chats", {
+        receiverId: post.userId
+      })
+      const receiver = await apiRequests.get("/users/unique/" + post.userId)
+      const reqData = receiver.data;
+      setChat({ receiver: reqData })
+    } else {
+      try {
+        const chatMessages = await apiRequests.get("/chats/" + res.data[0].id);
+        if (!chatMessages.data.seenBy.includes(currentUser.id)) decrease();
+        const receiverInfo = await apiRequests.get("/users/unique/" + post.userId)
+        const reqData = receiverInfo.data;
+        setChat({ ...chatMessages.data, receiver: reqData })
+      }
+      catch (err) {
+        console.log(err);
+      }
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const text = formData.get("text");
+    if (!text) return;
+    try {
+      const res = await apiRequests.post("/messages/" + chat.id, {
+        text
+      })
+      setChat(prev => ({...prev, messages: [...prev.messages, res.data]}));
+      e.target.reset();
+      socket.emit("sendMessage", {
+        receiverId: chat.receiver.id,
+        data: res.data,
+      })
+    }
+    catch (err) {
+      console.log(err);
     }
   }
 
@@ -44,11 +100,11 @@ function SinglePage() {
                 <div className="price">$ {post.price}</div>
               </div>
               <div className="user">
-                <img src={post.user.avatar} alt="" />
+                <img src={post.user.avatar || "/noavatar.jpg"} alt="" />
                 <span>{post.user.username}</span>
               </div>
             </div>
-            <div className="bottom" dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(post.postDetail.desc)}}></div>
+            <div className="bottom" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.postDetail.desc) }}></div>
           </div>
         </div>
       </div>
@@ -63,7 +119,7 @@ function SinglePage() {
                 {
                   post.postDetail.utilities === "owner" ? (
                     <p>Owner is responsible</p>
-                    ) : (
+                  ) : (
                     <p>Tenant is responsible</p>
                   )
                 }
@@ -127,11 +183,38 @@ function SinglePage() {
           <div className="mapContainer">
             <Map items={[post]} />
           </div>
+          {chat && (
+              <div className="chatBox">
+                <div className="top">
+                  <div className="user">
+                    <img
+                      src={chat.receiver.avatar || "noavatar.jpg"}
+                      alt=""
+                    />
+                    {chat.receiver.username}
+                  </div>
+                  <span className="close" onClick={() => setChat(null)}>X</span>
+                </div>
+                <div className="center">
+                  {chat?.messages?.map(message => (
+                    <div className="chatMessage" style={{ alignSelf: message.userId === currentUser.id ? "flex-end" : "flex-start", textAlign: message.userId === currentUser.id ? "right" : "left" }} key={message.id}>
+                      <p>{message.text}</p>
+                      <span>{format(message.createdAt)}</span>
+                    </div>
+                  ))}
+                  <div ref={messageEndRef}></div>
+                </div>
+                <form onSubmit={handleSubmit} className="bottom">
+                  <textarea name="text"></textarea>
+                  <button>Send</button>
+                </form>
+              </div>
+            )}
           <div className="buttons">
-            <button>
+            {post.userId !== currentUser.id && (<button onClick={handleClick}>
               <img src="/chat.png" alt="" />
               Send a Message
-            </button>
+            </button>)}
             <button onClick={handleSave} style={{ backgroundColor: saved ? "#fece51" : "white" }}>
               <img src="/save.png" alt="" />
               {saved ? "Place saved" : "Save the Place"}
