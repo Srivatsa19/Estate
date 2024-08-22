@@ -56,11 +56,23 @@ function Navbar() {
         </div>
         <div className={open ? "menu active" : "menu"}>
           <Link href="/">Home</Link>
+          {currentUser && (
+            <>
+              <Link to="/profile" className="profile">
+                {number > 0 && <div className="notification">{number}</div>}
+                Profile
+              </Link>
+            </>
+          )}
           <Link href="/">About</Link>
           <Link href="/">Contact</Link>
           <Link href="/">Agents</Link>
-          <Link to="/login">Sign in</Link>
-          <Link to="/register">Sign up</Link>
+          {!currentUser && (
+            <>
+              <Link to="/login">Sign in</Link>
+              <Link to="/register">Sign up</Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
