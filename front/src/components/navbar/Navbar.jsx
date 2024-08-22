@@ -59,7 +59,6 @@ function Navbar() {
           {currentUser && (
             <>
               <Link to="/profile" className="profile">
-                {number > 0 && <div className="notification">{number}</div>}
                 Profile
               </Link>
             </>
